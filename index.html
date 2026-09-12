@@ -3,15 +3,50 @@
   <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="description" content="AI News Assistant deployment smoke test">
-    <title>AI News Assistant</title>
+    <meta name="description" content="A simple briefing of recent AI news from trusted RSS feeds">
+    <title>AI News Briefing</title>
     <link rel="stylesheet" href="style.css">
+    <script src="app.js" defer></script>
   </head>
   <body>
-    <main class="status-card">
-      <p class="eyebrow">AI News Assistant · Phase 0</p>
-      <h1>Breaking News:<br>Your Website Exists.</h1>
-      <p class="status"><span aria-hidden="true"></span>Codex → GitHub → Vercel: ALIVE</p>
+    <header class="site-header">
+      <p class="eyebrow">AI News Assistant</p>
+      <h1>AI News Briefing</h1>
+      <p class="subtitle">Discover fresh AI stories with RSS, then retrieve a cleaner article excerpt with Deep Read.</p>
+    </header>
+
+    <main>
+      <section class="news-radar" aria-labelledby="news-radar-title">
+        <div class="section-heading">
+          <div>
+            <p class="section-number">01 · RSS discovery</p>
+            <h2 id="news-radar-title">News Radar</h2>
+          </div>
+          <p>WIRED, TechCrunch and VentureBeat in one feed.</p>
+        </div>
+
+        <div class="controls">
+          <button id="load-news" class="primary-button" type="button">Load Latest News</button>
+          <label class="filter-control" for="news-filter">
+            <span>Filter loaded stories</span>
+            <input id="news-filter" type="search" placeholder="Try “agents” or “chips”" autocomplete="off" disabled>
+          </label>
+        </div>
+
+        <p id="news-status" class="status-message" role="status" aria-live="polite">Choose “Load Latest News” to fetch the three RSS feeds.</p>
+
+        <aside id="deep-read-panel" class="deep-read-panel" aria-labelledby="deep-read-title" aria-live="polite" hidden>
+          <p class="section-number">02 · Firecrawl extraction</p>
+          <h3 id="deep-read-title">Deep Read</h3>
+          <div id="deep-read-content"></div>
+        </aside>
+
+        <div id="article-list" class="article-grid" aria-live="polite"></div>
+      </section>
     </main>
+
+    <footer>
+      <p>RSS tells us what changed. Firecrawl lets us read one selected webpage.</p>
+    </footer>
   </body>
 </html>
