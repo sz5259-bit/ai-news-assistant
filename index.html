@@ -43,10 +43,31 @@
 
         <div id="article-list" class="article-grid" aria-live="polite"></div>
       </section>
+
+      <section class="web-explorer" aria-labelledby="web-explorer-title">
+        <div class="section-heading">
+          <div>
+            <p class="section-number">03 · Single-page scrape</p>
+            <h2 id="web-explorer-title">Explore Any Web Page</h2>
+          </div>
+          <p>Retrieve one public webpage when there is no prepared RSS feed.</p>
+        </div>
+
+        <form id="web-explorer-form" class="explorer-form" novalidate>
+          <label class="url-control" for="web-explorer-url">
+            <span>Public webpage URL</span>
+            <input id="web-explorer-url" name="url" type="url" placeholder="https://example.com/article" autocomplete="url">
+          </label>
+          <button id="scrape-page" class="primary-button" type="submit">Scrape Page</button>
+        </form>
+
+        <p id="web-explorer-status" class="status-message" role="status" aria-live="polite">Enter one public webpage URL to retrieve a clean excerpt.</p>
+        <div id="web-explorer-result" class="explorer-result" aria-live="polite" hidden></div>
+      </section>
     </main>
 
     <footer>
-      <p>RSS tells us what changed. Firecrawl lets us read one selected webpage.</p>
+      <p>RSS discovers what changed. Firecrawl retrieves one selected webpage at a time.</p>
     </footer>
   </body>
 </html>

@@ -4,6 +4,11 @@ const newsStatus = document.querySelector("#news-status");
 const articleList = document.querySelector("#article-list");
 const deepReadPanel = document.querySelector("#deep-read-panel");
 const deepReadContent = document.querySelector("#deep-read-content");
+const explorerForm = document.querySelector("#web-explorer-form");
+const explorerInput = document.querySelector("#web-explorer-url");
+const scrapePageButton = document.querySelector("#scrape-page");
+const explorerStatus = document.querySelector("#web-explorer-status");
+const explorerResult = document.querySelector("#web-explorer-result");
 
 let loadedArticles = [];
 
@@ -30,6 +35,37 @@ function makeLink(label, url, className = "original-link") {
   link.rel = "noopener noreferrer";
   link.textContent = label;
   return link;
+}
+
+function createScrapeResult(payload, fallbackUrl, linkLabel) {
+  const wrapper = document.createDocumentFragment();
+
+  const title = document.createElement("h3");
+  title.textContent = payload.title || payload.domain || "Retrieved webpage";
+
+  const source = document.createElement("p");
+  source.className = "result-source";
+  source.textContent = `Retrieved from ${payload.domain || new URL(fallbackUrl).hostname}`;
+
+  const url = document.createElement("p");
+  url.className = "result-url";
+  url.textContent = payload.url || fallbackUrl;
+
+  wrapper.append(title, source, url);
+
+  if (payload.description) {
+    const description = document.createElement("p");
+    description.className = "result-description";
+    description.textContent = payload.description;
+    wrapper.append(description);
+  }
+
+  const excerpt = document.createElement("p");
+  excerpt.className = "deep-read-content";
+  excerpt.textContent = payload.content || "No readable excerpt was returned.";
+  wrapper.append(excerpt, makeLink(linkLabel, payload.url || fallbackUrl));
+
+  return wrapper;
 }
 
 function createArticleCard(article) {
@@ -163,21 +199,12 @@ async function runDeepRead(article, button) {
       throw new Error(payload.error || "Deep Read could not retrieve this article.");
     }
 
-    const resultTitle = document.createElement("h3");
-    resultTitle.textContent = payload.title || article.title;
-
-    const source = document.createElement("p");
-    source.textContent = `Retrieved from ${payload.domain || article.source}`;
-
-    const excerpt = document.createElement("p");
-    excerpt.className = "deep-read-content";
-    excerpt.textContent = payload.content || "No readable excerpt was returned.";
-
     deepReadContent.replaceChildren(
-      resultTitle,
-      source,
-      excerpt,
-      makeLink("Open Original Article ↗", payload.url || article.url),
+      createScrapeResult(
+        { ...payload, title: payload.title || article.title },
+        article.url,
+        "Open Original Article ↗",
+      ),
     );
   } catch (error) {
     showDeepReadError(error.message);
@@ -187,5 +214,53 @@ async function runDeepRead(article, button) {
   }
 }
 
+function setExplorerStatus(message, isError = false) {
+  explorerStatus.textContent = message;
+  explorerStatus.classList.toggle("error", isError);
+}
+
+async function exploreWebPage(event) {
+  event.preventDefault();
+  const requestedUrl = explorerInput.value.trim();
+
+  explorerResult.hidden = true;
+  explorerResult.replaceChildren();
+
+  if (!requestedUrl) {
+    setExplorerStatus("Enter a public webpage URL before choosing Scrape Page.", true);
+    explorerInput.focus();
+    return;
+  }
+
+  scrapePageButton.disabled = true;
+  scrapePageButton.textContent = "Scraping page…";
+  explorerInput.disabled = true;
+  setExplorerStatus(`Retrieving ${requestedUrl}…`);
+
+  try {
+    const response = await fetch("/api/scrape", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ url: requestedUrl }),
+    });
+    const payload = await response.json().catch(() => ({}));
+
+    if (!response.ok) {
+      throw new Error(payload.error || "Web Explorer could not retrieve this page.");
+    }
+
+    explorerResult.replaceChildren(createScrapeResult(payload, requestedUrl, "Open Original Page ↗"));
+    explorerResult.hidden = false;
+    setExplorerStatus("Page retrieved successfully.");
+  } catch (error) {
+    setExplorerStatus(`${error.message} Please try again.`, true);
+  } finally {
+    scrapePageButton.disabled = false;
+    scrapePageButton.textContent = "Scrape Page";
+    explorerInput.disabled = false;
+  }
+}
+
 loadButton.addEventListener("click", loadNews);
 filterInput.addEventListener("input", renderArticles);
+explorerForm.addEventListener("submit", exploreWebPage);
