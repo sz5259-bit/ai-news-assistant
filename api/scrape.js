@@ -31,8 +31,31 @@ function validateWebUrl(value) {
     throw new Error("URLs containing usernames or passwords are not allowed.");
   }
 
-  const hostname = url.hostname.toLowerCase();
-  if (hostname === "localhost" || hostname.endsWith(".local") || hostname === "127.0.0.1" || hostname === "::1") {
+  const hostname = url.hostname.toLowerCase().replace(/^\[|\]$/g, "");
+  const ipv4Parts = hostname.split(".").map(Number);
+  const isIpv4 = ipv4Parts.length === 4 && ipv4Parts.every((part) => Number.isInteger(part) && part >= 0 && part <= 255);
+  const isPrivateIpv4 = isIpv4 && (
+    ipv4Parts[0] === 10
+    || ipv4Parts[0] === 127
+    || (ipv4Parts[0] === 169 && ipv4Parts[1] === 254)
+    || (ipv4Parts[0] === 172 && ipv4Parts[1] >= 16 && ipv4Parts[1] <= 31)
+    || (ipv4Parts[0] === 192 && ipv4Parts[1] === 168)
+    || ipv4Parts[0] === 0
+  );
+  const isPrivateIpv6 = hostname === "::1"
+    || hostname === "::"
+    || hostname.startsWith("fc")
+    || hostname.startsWith("fd")
+    || /^fe[89ab]/.test(hostname);
+
+  if (
+    hostname === "localhost"
+    || hostname.endsWith(".localhost")
+    || hostname.endsWith(".local")
+    || hostname.endsWith(".internal")
+    || isPrivateIpv4
+    || isPrivateIpv6
+  ) {
     throw new Error("Only public webpage URLs are allowed.");
   }
 

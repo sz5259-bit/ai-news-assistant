@@ -64,6 +64,61 @@
         <p id="web-explorer-status" class="status-message" role="status" aria-live="polite">Enter one public webpage URL to retrieve a clean excerpt.</p>
         <div id="web-explorer-result" class="explorer-result" aria-live="polite" hidden></div>
       </section>
+
+      <section class="job-scout" aria-labelledby="job-scout-title">
+        <div class="section-heading">
+          <div>
+            <p class="section-number">04 · Multi-source comparison</p>
+            <h2 id="job-scout-title">Junior Job Scout</h2>
+          </div>
+          <p>Paste up to 5 public job-listing pages. We will compare visible roles and surface promising early-career opportunities.</p>
+        </div>
+
+        <form id="job-scout-form" class="job-scout-form" novalidate>
+          <div class="job-source-grid">
+            <label class="url-control" for="job-source-1">
+              <span>Job Source 1 URL <strong>Required</strong></span>
+              <input id="job-source-1" class="job-source-input" name="job-source-1" type="url" placeholder="https://example.gov/jobs" autocomplete="url" required>
+            </label>
+            <label class="url-control" for="job-source-2">
+              <span>Job Source 2 URL</span>
+              <input id="job-source-2" class="job-source-input" name="job-source-2" type="url" placeholder="https://example.org/careers" autocomplete="url">
+            </label>
+            <label class="url-control" for="job-source-3">
+              <span>Job Source 3 URL</span>
+              <input id="job-source-3" class="job-source-input" name="job-source-3" type="url" placeholder="https://example.net/vacancies" autocomplete="url">
+            </label>
+            <label class="url-control" for="job-source-4">
+              <span>Job Source 4 URL</span>
+              <input id="job-source-4" class="job-source-input" name="job-source-4" type="url" placeholder="https://example.edu/jobs" autocomplete="url">
+            </label>
+            <label class="url-control" for="job-source-5">
+              <span>Job Source 5 URL</span>
+              <input id="job-source-5" class="job-source-input" name="job-source-5" type="url" placeholder="https://example.gov/careers" autocomplete="url">
+            </label>
+          </div>
+
+          <div class="job-scout-actions">
+            <button id="find-junior-jobs" class="primary-button" type="submit">Find Junior Opportunities</button>
+            <button id="clear-job-results" class="secondary-button" type="button">Clear Results</button>
+          </div>
+        </form>
+
+        <ol id="job-source-statuses" class="source-status-list" aria-label="Job source scan statuses">
+          <li><span>Job Source 1</span><strong>Waiting</strong></li>
+          <li><span>Job Source 2</span><strong>Waiting</strong></li>
+          <li><span>Job Source 3</span><strong>Waiting</strong></li>
+          <li><span>Job Source 4</span><strong>Waiting</strong></li>
+          <li><span>Job Source 5</span><strong>Waiting</strong></li>
+        </ol>
+
+        <section class="job-results-panel" aria-labelledby="job-results-title">
+          <p class="section-number">Ranked recommendations</p>
+          <h3 id="job-results-title">Top 5 Junior Opportunities</h3>
+          <p id="job-scout-status" class="status-message" role="status" aria-live="polite">Add at least one public job-listing page to begin.</p>
+          <div id="job-results" class="job-results" aria-live="polite"></div>
+        </section>
+      </section>
     </main>
 
     <footer>

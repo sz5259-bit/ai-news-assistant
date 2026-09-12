@@ -72,7 +72,8 @@ h1 {
 }
 
 .news-radar,
-.web-explorer {
+.web-explorer,
+.job-scout {
   padding: clamp(24px, 5vw, 48px);
   border: 1px solid rgba(255, 255, 255, 0.13);
   border-radius: 28px;
@@ -81,9 +82,14 @@ h1 {
   backdrop-filter: blur(18px);
 }
 
-.web-explorer {
+.web-explorer,
+.job-scout {
   margin-top: 28px;
   background: rgba(8, 19, 36, 0.88);
+}
+
+.job-scout {
+  background: rgba(12, 20, 38, 0.9);
 }
 
 .section-heading {
@@ -119,7 +125,8 @@ h1 {
 }
 
 .primary-button,
-.deep-read-button {
+.deep-read-button,
+.secondary-button {
   border: 0;
   border-radius: 12px;
   cursor: pointer;
@@ -135,7 +142,8 @@ h1 {
 }
 
 .primary-button:hover,
-.deep-read-button:hover {
+.deep-read-button:hover,
+.secondary-button:hover {
   transform: translateY(-1px);
 }
 
@@ -170,6 +178,14 @@ button:disabled {
 .url-control input:focus {
   border-color: #55e2ae;
   box-shadow: 0 0 0 3px rgba(85, 226, 174, 0.14);
+}
+
+.url-control strong {
+  margin-left: 6px;
+  color: #63e5b7;
+  font-size: 0.68rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
 }
 
 .status-message {
@@ -249,6 +265,154 @@ button:disabled {
 .result-description {
   padding-bottom: 18px;
   border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.job-scout-form {
+  padding: 20px;
+  border-radius: 20px;
+  background: rgba(255, 255, 255, 0.045);
+}
+
+.job-source-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px;
+}
+
+.job-source-grid .url-control:first-child {
+  grid-column: 1 / -1;
+}
+
+.job-scout-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-top: 18px;
+}
+
+.secondary-button {
+  min-height: 50px;
+  padding: 0 22px;
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  background: transparent;
+  color: #d5e3ef;
+}
+
+.source-status-list {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 8px;
+  margin: 18px 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.source-status-list li {
+  display: grid;
+  gap: 5px;
+  min-width: 0;
+  padding: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.09);
+  border-radius: 12px;
+  background: rgba(4, 14, 26, 0.5);
+  color: #8196aa;
+  font-size: 0.72rem;
+}
+
+.source-status-list strong {
+  overflow: hidden;
+  color: #c4d0dc;
+  font-size: 0.78rem;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.source-status-list .scanning {
+  color: #f0cb71;
+}
+
+.source-status-list .extracted {
+  color: #63e5b7;
+}
+
+.source-status-list .no_jobs,
+.source-status-list .could_not_extract {
+  color: #ffaaa5;
+}
+
+.job-results-panel {
+  margin-top: 24px;
+  padding: clamp(22px, 4vw, 34px);
+  border: 1px solid rgba(240, 203, 113, 0.28);
+  border-radius: 20px;
+  background: linear-gradient(135deg, rgba(240, 203, 113, 0.08), rgba(57, 99, 189, 0.09));
+}
+
+.job-results-panel h3 {
+  margin-bottom: 0;
+  font-size: clamp(1.7rem, 4vw, 2.5rem);
+  letter-spacing: -0.035em;
+}
+
+.job-results {
+  display: grid;
+  gap: 16px;
+  margin-top: 22px;
+}
+
+.job-card {
+  position: relative;
+  padding: 24px 24px 24px 82px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 18px;
+  background: rgba(4, 14, 26, 0.66);
+}
+
+.job-rank {
+  position: absolute;
+  top: 24px;
+  left: 24px;
+  color: #f0cb71;
+  font-size: 1.35rem;
+  font-weight: 850;
+}
+
+.job-card h4 {
+  margin: 0 0 10px;
+  font-size: 1.35rem;
+  line-height: 1.25;
+}
+
+.job-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 7px;
+  color: #8fa3b7;
+  font-size: 0.78rem;
+}
+
+.job-meta span:not(:last-child)::after {
+  margin-left: 7px;
+  color: #4f667c;
+  content: "·";
+}
+
+.job-reasons {
+  display: grid;
+  gap: 10px;
+  margin: 20px 0 22px;
+  padding-left: 20px;
+  color: #b9c7d5;
+  line-height: 1.55;
+}
+
+.job-reasons strong {
+  color: #f1f6fa;
+}
+
+.link-unavailable {
+  color: #72869a;
+  font-size: 0.86rem;
 }
 
 .article-grid {
@@ -357,6 +521,28 @@ footer {
 
   .article-grid {
     grid-template-columns: 1fr;
+  }
+
+  .job-source-grid,
+  .source-status-list {
+    grid-template-columns: 1fr;
+  }
+
+  .job-source-grid .url-control:first-child {
+    grid-column: auto;
+  }
+
+  .source-status-list {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .job-card {
+    padding: 70px 20px 22px;
+  }
+
+  .job-rank {
+    top: 20px;
+    left: 20px;
   }
 
   .primary-button {
