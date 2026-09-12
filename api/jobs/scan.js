@@ -7,7 +7,7 @@ const MAX_RESULTS = 5;
 
 export const maxDuration = 60;
 
-const EXTRACTION_PROMPT = `Extract up to 8 job opportunities visibly listed on this page. Focus on actual job postings, not navigation or promotional content. For each job return title, employer, location, direct job URL if visible, date, employment type, a short factual description, evidence that it is junior/graduate/entry-level, transferable skills, future-relevant technology/digital/data/policy/innovation signals, learning/training signals, and any evidence that the role is actually senior. Do not infer unsupported facts. Return empty strings or arrays when evidence is unavailable.`;
+const EXTRACTION_PROMPT = `Extract up to 8 job opportunities visibly listed on this page. Focus on actual job postings, not navigation or promotional content. For each job return title, employer, location, direct job URL if visible, date, employment type, a short factual description, evidence that it is junior/graduate/entry-level, transferable skills, future-relevant technology/digital/data/policy/innovation signals, learning/training signals, and any evidence that the role is actually senior. Copy short exact phrases from the visible page for the description and every evidence array. Do not infer, summarize, or create unsupported facts. Return empty strings or arrays when evidence is unavailable.`;
 
 const STRING_FIELDS = {
   type: "string",
@@ -135,6 +135,25 @@ function textList(value, maximum = 6) {
   return [...new Set(value.map((item) => text(item, 220)).filter(Boolean))].slice(0, maximum);
 }
 
+function comparableText(value) {
+  return text(value, 60_000)
+    .normalize("NFKD")
+    .toLocaleLowerCase()
+    .replace(/[^\p{L}\p{N}]+/gu, " ")
+    .trim();
+}
+
+function groundedText(value, sourceContent, maximum) {
+  const cleaned = text(value, maximum);
+  if (!cleaned) return "";
+  const needle = comparableText(cleaned);
+  return needle && comparableText(sourceContent).includes(needle) ? cleaned : "";
+}
+
+function groundedList(value, sourceContent, maximum = 6) {
+  return textList(value, maximum).filter((item) => groundedText(item, sourceContent, 220));
+}
+
 function normalizeUrls(values) {
   if (!Array.isArray(values) || values.length < 1) {
     throw new Error("Provide at least one public job-listing URL.");
@@ -157,15 +176,19 @@ function normalizeUrls(values) {
   return [...unique.values()];
 }
 
-function normalizeJob(rawJob, sourceUrl) {
+function normalizeJob(rawJob, sourceUrl, sourceContent) {
   if (!rawJob || typeof rawJob !== "object") return null;
-  const title = text(rawJob.title, 180);
+  const title = groundedText(rawJob.title, sourceContent, 180);
   if (!title) return null;
 
   let jobUrl = "";
-  if (text(rawJob.jobUrl, 1_000)) {
+  const rawJobUrl = text(rawJob.jobUrl, 1_000);
+  if (rawJobUrl) {
     try {
-      jobUrl = validateWebUrl(new URL(rawJob.jobUrl, sourceUrl).href).href;
+      const candidateUrl = validateWebUrl(new URL(rawJobUrl, sourceUrl).href).href;
+      if (sourceContent.includes(rawJobUrl) || sourceContent.includes(candidateUrl)) {
+        jobUrl = candidateUrl;
+      }
     } catch {
       jobUrl = "";
     }
@@ -173,17 +196,17 @@ function normalizeJob(rawJob, sourceUrl) {
 
   return {
     title,
-    employer: text(rawJob.employer, 180),
-    location: text(rawJob.location, 180),
+    employer: groundedText(rawJob.employer, sourceContent, 180),
+    location: groundedText(rawJob.location, sourceContent, 180),
     jobUrl,
-    postedDate: text(rawJob.postedDate, 100),
-    employmentType: text(rawJob.employmentType, 100),
-    description: text(rawJob.description, 1_000),
-    juniorEvidence: textList(rawJob.juniorEvidence),
-    transferableSkills: textList(rawJob.transferableSkills),
-    futureRelevantSignals: textList(rawJob.futureRelevantSignals),
-    learningSignals: textList(rawJob.learningSignals),
-    seniorityWarnings: textList(rawJob.seniorityWarnings),
+    postedDate: groundedText(rawJob.postedDate, sourceContent, 100),
+    employmentType: groundedText(rawJob.employmentType, sourceContent, 100),
+    description: groundedText(rawJob.description, sourceContent, 1_000),
+    juniorEvidence: groundedList(rawJob.juniorEvidence, sourceContent),
+    transferableSkills: groundedList(rawJob.transferableSkills, sourceContent),
+    futureRelevantSignals: groundedList(rawJob.futureRelevantSignals, sourceContent),
+    learningSignals: groundedList(rawJob.learningSignals, sourceContent),
+    seniorityWarnings: groundedList(rawJob.seniorityWarnings, sourceContent),
     sourceDomain: sourceUrl.hostname.replace(/^www\./, ""),
     sourceUrl: sourceUrl.href,
   };
@@ -308,11 +331,14 @@ async function scanSource(sourceUrl, apiKey) {
       },
       body: JSON.stringify({
         url: sourceUrl.href,
-        formats: [{
-          type: "json",
-          prompt: EXTRACTION_PROMPT,
-          schema: JOB_SCHEMA,
-        }],
+        formats: [
+          "markdown",
+          {
+            type: "json",
+            prompt: EXTRACTION_PROMPT,
+            schema: JOB_SCHEMA,
+          },
+        ],
         onlyMainContent: true,
         removeBase64Images: true,
         blockAds: true,
@@ -327,9 +353,10 @@ async function scanSource(sourceUrl, apiKey) {
     }
 
     const extracted = parseExtractedJson(payload.data?.json);
+    const sourceContent = text(payload.data?.markdown, 60_000);
     const jobs = (Array.isArray(extracted.jobs) ? extracted.jobs : [])
       .slice(0, MAX_JOBS_PER_SOURCE)
-      .map((job) => normalizeJob(job, sourceUrl))
+      .map((job) => normalizeJob(job, sourceUrl, sourceContent))
       .filter(Boolean);
 
     if (!jobs.length) {

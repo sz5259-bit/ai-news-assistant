@@ -76,7 +76,21 @@ test("scrape route rejects non-web URLs and reports a missing key", async () => 
 });
 
 function extractedJobs(jobs) {
-  return new Response(JSON.stringify({ success: true, data: { json: { jobs } } }), {
+  const markdown = jobs.flatMap((item) => [
+    item.title,
+    item.employer,
+    item.location,
+    item.jobUrl,
+    item.postedDate,
+    item.employmentType,
+    item.description,
+    ...(item.juniorEvidence || []),
+    ...(item.transferableSkills || []),
+    ...(item.futureRelevantSignals || []),
+    ...(item.learningSignals || []),
+    ...(item.seniorityWarnings || []),
+  ]).join("\n");
+  return new Response(JSON.stringify({ success: true, data: { json: { jobs }, markdown } }), {
     status: 200,
     headers: { "Content-Type": "application/json" },
   });
@@ -138,6 +152,31 @@ test("job ranking puts junior evidence ahead of senior roles and returns exactly
   ]);
 });
 
+test("job extraction discards roles that are not grounded in the scraped page", async () => {
+  const originalFetch = globalThis.fetch;
+  const previousKey = process.env.FIRECRAWL_API_KEY;
+  process.env.FIRECRAWL_API_KEY = "test-key";
+  globalThis.fetch = async () => new Response(JSON.stringify({
+    success: true,
+    data: {
+      markdown: "# Careers landing page\nBrowse our services and training resources.",
+      json: { jobs: [job()] },
+    },
+  }), { status: 200, headers: { "Content-Type": "application/json" } });
+
+  try {
+    const { response, result } = mockResponse();
+    await jobScanHandler({ method: "POST", body: { urls: ["https://example.com/jobs"] } }, response);
+    assert.equal(result.status, 200);
+    assert.equal(result.body.sources[0].status, "no_jobs");
+    assert.equal(result.body.jobs.length, 0);
+  } finally {
+    globalThis.fetch = originalFetch;
+    if (previousKey) process.env.FIRECRAWL_API_KEY = previousKey;
+    else delete process.env.FIRECRAWL_API_KEY;
+  }
+});
+
 test("job scan accepts one source and returns normalized recommendations", async () => {
   const originalFetch = globalThis.fetch;
   const previousKey = process.env.FIRECRAWL_API_KEY;
@@ -167,7 +206,8 @@ test("job scan handles five sources and preserves results when one source fails"
   globalThis.fetch = async (_url, options) => {
     const request = JSON.parse(options.body);
     requestedUrls.push(request.url);
-    assert.equal(request.formats[0].type, "json");
+    assert.equal(request.formats[0], "markdown");
+    assert.equal(request.formats[1].type, "json");
     if (request.url.includes("broken.example")) {
       return new Response(JSON.stringify({ success: false }), { status: 403 });
     }
